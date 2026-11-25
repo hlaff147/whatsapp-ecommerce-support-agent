@@ -1,0 +1,13 @@
+"""Constantes da camada de aplicação (códigos de erro estruturados)."""
+
+from enum import StrEnum
+
+
+class ErrorCode(StrEnum):
+    VERIFICATION_REQUIRED = "VERIFICATION_REQUIRED"
+    VERIFICATION_BLOCKED = "VERIFICATION_BLOCKED"
+    NOT_FOUND = "NOT_FOUND"
+    BUSINESS_RULE = "BUSINESS_RULE"
+    SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
+    TOOL_BUDGET_EXCEEDED = "TOOL_BUDGET_EXCEEDED"
+    INTERNAL = "INTERNAL"

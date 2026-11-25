@@ -1,0 +1,132 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pawdesk"
+version = "0.1.0"
+description = "Agente conversacional de atendimento ao cliente de e-commerce pet via WhatsApp com Google ADK e Arquitetura Hexagonal"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "google-adk[db]>=1.0.0",
+    "litellm>=1.60.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "httpx>=0.28.0",
+    "celery[redis]>=5.4.0",
+    "redis>=5.2.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "aiomysql>=0.2.0",
+    "pymysql>=1.1.1",
+    "alembic>=1.14.0",
+    "pydantic-settings>=2.7.0",
+    "cryptography>=44.0.0",
+    "structlog>=25.1.0",
+    "opentelemetry-sdk>=1.30.0",
+    "opentelemetry-exporter-otlp>=1.30.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "ruff>=0.9.0",
+    "mypy>=1.14.0",
+    "import-linter>=2.1",
+    "testcontainers[mysql,redis]>=4.9.0",
+    "freezegun>=1.5.0",
+    "respx>=0.22.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pawdesk"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["B008"]  # FastAPI Depends()
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+packages = ["pawdesk"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["pawdesk.adapters.*", "pawdesk.bootstrap.*"]
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: tests that require Docker containers (MySQL/Redis)",
+]
+
+[tool.importlinter]
+root_package = "pawdesk"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Camadas hexagonais"
+type = "layers"
+layers = [
+    "pawdesk.bootstrap",
+    "pawdesk.adapters",
+    "pawdesk.application",
+    "pawdesk.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "Núcleo livre de frameworks"
+type = "forbidden"
+source_modules = ["pawdesk.domain", "pawdesk.application"]
+forbidden_modules = [
+    "google",
+    "fastapi",
+    "celery",
+    "sqlalchemy",
+    "redis",
+    "litellm",
+    "httpx",
+    "cryptography",
+]
+
+[[tool.importlinter.contracts]]
+name = "Shared é folha pura"
+type = "forbidden"
+source_modules = ["pawdesk.shared"]
+forbidden_modules = [
+    "pawdesk.domain",
+    "pawdesk.application",
+    "pawdesk.adapters",
+    "pawdesk.bootstrap",
+    "google",
+    "fastapi",
+    "celery",
+    "sqlalchemy",
+    "redis",
+    "litellm",
+    "httpx",
+    "cryptography",
+]
+
+[[tool.importlinter.contracts]]
+name = "Adaptadores independentes entre si"
+type = "independence"
+modules = [
+    "pawdesk.adapters.inbound",
+    "pawdesk.adapters.outbound",
+    "pawdesk.adapters.agentic",
+]
